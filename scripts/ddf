@@ -1,0 +1,68 @@
+#!/bin/bash
+
+REPO_DIR="$HOME/dotfiles"
+HOME_DIR="$HOME"
+BRANCH="hyprland"
+
+cd "$REPO_DIR" || { echo "Repo not found at $REPO_DIR"; exit 1; }
+
+git checkout "$BRANCH" > /dev/null 2>&1 || {
+    echo "Failed to checkout branch $BRANCH"
+    exit 1
+}
+
+echo "Comparing dotfiles in $HOME_DIR with $REPO_DIR"
+
+# Get all directories in the dotfiles repo (excluding .git and other non-dotfile dirs)
+find . -maxdepth 1 -type d -not -name '.' -not -name '.git' -not -name '.github' | while IFS= read -r dir; do
+    dir_name="${dir#./}"  # Remove leading ./
+    
+    # Map directory exactly as named in the dotfiles repo
+    live_base_dir="$HOME_DIR/$dir_name"
+    
+    echo "Processing directory: $dir_name -> $live_base_dir"
+    
+    # Check if the live directory exists
+    if [ ! -d "$live_base_dir" ]; then
+        echo "Live directory missing: $live_base_dir (skipping)"
+        continue
+    fi
+    
+    # Find all files in the repo directory
+    while IFS= read -r relative_path <&3; do
+        repo_file="$REPO_DIR/$relative_path"
+        # Remove the repo directory prefix to get the relative path within the dotfile dir
+        file_in_dir="${relative_path#$dir_name/}"
+        live_file="$live_base_dir/$file_in_dir"
+        
+        if [ -f "$live_file" ]; then
+            if ! diff -u "$repo_file" "$live_file" > /tmp/diff_output.txt; then
+                echo "----------------------------------------"
+                echo "Diff for: $relative_path"
+                cat /tmp/diff_output.txt
+                echo
+                
+                # Read from terminal (stdin) instead of the redirected input
+                read -e -r -p "Update repo version with live version? [y/N]: " response </dev/tty
+                
+                if [[ "$response" =~ ^[Yy]$ ]]; then
+                    # Ensure the directory exists in the repo
+                    mkdir -p "$(dirname "$repo_file")"
+                    cp "$live_file" "$repo_file"
+                    echo "Updated: $relative_path"
+                else
+                    echo "Skipped: $relative_path"
+                fi
+            fi
+        else
+            echo "Live file missing: $live_file"
+            read -e -r -p "Remove from repo? [y/N]: " response </dev/tty
+            if [[ "$response" =~ ^[Yy]$ ]]; then
+                rm "$repo_file"
+                echo "Removed from repo: $relative_path"
+            fi
+        fi
+    done 3< <(find "$dir_name" -type f 2>/dev/null)
+done
+
+echo "Done."

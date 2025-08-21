@@ -18,7 +18,10 @@ source ~/.zprofile
 brew analytics off
 
 ## Formulae
+brew install mas
 brew install wget
+brew install htop
+brew install btop
 brew install helix
 brew install nushell
 brew install starship

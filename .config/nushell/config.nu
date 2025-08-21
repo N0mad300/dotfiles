@@ -18,14 +18,27 @@
 #     config nu --doc | nu-highlight | less -R
 
 $env.config.show_banner = false
-$env.config.buffer_editor = "vi"
-$env.PATH ++= ['/opt/homebrew/bin']
+$env.config.buffer_editor = "hx"
+
+# homebrew
+$env.HOMEBREW_PREFIX = "/opt/homebrew"
+$env.HOMEBREW_CELLAR = "/opt/homebrew/Cellar"
+$env.HOMEBREW_REPOSITORY = "/opt/homebrew"
+$env.PATH ++= ['/opt/homebrew/bin', '/opt/homebrew/sbin']
 
 # starship
 mkdir ($nu.data-dir | path join "vendor/autoload")
 starship init nu | save -f ($nu.data-dir | path join "vendor/autoload/starship.nu")
 
 # dotfiles management
+# 
+# Usefull commands :
+# To track a new file:     dotfiles add <path to file to track>
+# To update tracked files: dotfiles add "-u"
+# To commit :              dotfiles commit "-m" "<message>"
+# To push :                dotfiles push origin macos
+#
+# Note : Don't forget flags (ex: -m/--help) need to be in quote
 def dotfiles [...args: string] {
     git $"--git-dir=($env.HOME)/dotfiles" $"--work-tree=($env.HOME)" ...$args
 }

@@ -1,0 +1,19 @@
+theme = "gruvbox"
+
+[editor]
+cursorline = true
+bufferline = "always"
+
+[editor.statusline]
+left = ["mode"]
+center = ["file-name"]
+right = ["position", "file-type"]
+
+[editor.cursor-shape]
+insert = "bar"
+
+[keys.normal]
+C-s = ":w"
+
+[keys.insert]
+C-s = ":w"

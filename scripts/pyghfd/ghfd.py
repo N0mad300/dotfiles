@@ -134,7 +134,7 @@ class GitHubFolderDownloader:
                         print("✓ Commit found in repository")
                     except subprocess.CalledProcessError:
                         # If commit not found, fetch more history
-                        print("⚠️  Commit not in shallow history, fetching more...")
+                        print("Commit not in shallow history, fetching more...")
                         subprocess.run([
                             "git", "-C", str(repo_path),
                             "fetch", "--unshallow"
@@ -244,15 +244,15 @@ class GitHubFolderDownloader:
                 total_dirs = sum(1 for _ in target_path.rglob('*') if _.is_dir())
                 
                 print(f"\nDownload completed!")
-                print(f"📁 Directories: {total_dirs}")
-                print(f"📄 Files: {total_files}")
-                print(f"📍 Location: {target_path.absolute()}")
-                print(f"🔗 Git reference: {git_ref} ({ref_type})")
+                print(f"Directories: {total_dirs}")
+                print(f"Files: {total_files}")
+                print(f"Location: {target_path.absolute()}")
+                print(f"Git reference: {git_ref} ({ref_type})")
                 
                 return True
                 
             except subprocess.CalledProcessError as e:
-                print(f"\n❌ Git command failed:")
+                print(f"\nGit command failed:")
                 print(f"Command: {' '.join(e.cmd)}")
                 if e.stderr:
                     print(f"Error: {e.stderr}")
@@ -261,11 +261,11 @@ class GitHubFolderDownloader:
                 return False
                 
             except FileNotFoundError as e:
-                print(f"\n❌ {e}")
+                print(f"\n{e}")
                 return False
                 
             except Exception as e:
-                print(f"\n❌ Unexpected error: {e}")
+                print(f"\nUnexpected error: {e}")
                 return False
     
     def download(self):
@@ -282,53 +282,7 @@ class GitHubFolderDownloader:
 def main():
     parser = argparse.ArgumentParser(
         description="Download GitHub repository folders using git sparse-checkout",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-How Git Sparse-Checkout Works (SAFELY):
-========================================
-
-This script uses git sparse-checkout in a completely isolated way that won't
-affect your other Git repositories or global Git settings.
-
-Safety measures:
-- Uses --local flag to modify only the temporary repository config
-- Works in a temporary directory that gets automatically deleted
-- Never touches your global Git configuration
-- No impact on your existing projects
-
-The process:
-1. Clone the repository in a temporary directory (--no-checkout)
-2. Enable sparse-checkout ONLY for this temporary repo (--local config)
-3. Define patterns in .git/info/sparse-checkout file (repo-specific)
-4. Checkout files matching the patterns
-5. Copy files to your desired location
-6. Delete temporary directory (automatic cleanup)
-
-Benefits:
-- Only downloads what you need
-- Much faster than cloning entire large repositories
-- Supports complex patterns and multiple folders
-- Uses standard Git protocols (works with any Git host)
-
-Examples:
-  # Download specific folder from latest commit
-  python github_downloader.py https://github.com/user/repo/tree/main/src
-  
-  # Download from specific commit (like your example)
-  python github_downloader.py https://github.com/binnewbs/arch-hyprland/tree/03b85877996253b0518e8a57f6249a4d2dcf4697/.config/waybar
-  
-  # Download from specific tag
-  python github_downloader.py https://github.com/user/repo/tree/v1.2.0/docs
-  
-  # Download from different branch
-  python github_downloader.py https://github.com/user/repo/tree/develop/src
-  
-  # Download entire repository at specific commit
-  python github_downloader.py https://github.com/user/repo/tree/abc1234
-  
-  # Custom output location
-  python github_downloader.py https://github.com/user/repo/tree/main/src ~/my_projects
-        """
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
     parser.add_argument('url', help='GitHub repository or folder URL')
@@ -339,7 +293,7 @@ Examples:
     
     # Validate URL
     if 'github.com' not in args.url:
-        print("❌ Error: Please provide a valid GitHub URL")
+        print("Error: Please provide a valid GitHub URL")
         sys.exit(1)
     
     try:
@@ -350,10 +304,10 @@ Examples:
         sys.exit(0 if success else 1)
         
     except KeyboardInterrupt:
-        print("\n\n⚠️  Download interrupted by user")
+        print("\n\nDownload interrupted by user")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
+        print(f"\n Unexpected error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

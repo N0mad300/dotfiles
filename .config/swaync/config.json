@@ -67,7 +67,7 @@
               },
               {
                   "label": "󰍃",
-                  "command": "hyprctl dispatch exit"
+                  "command": "$HOME/.config/hypr/scripts/power.sh logout"
               },
               {
                   "label": "󰀝",
@@ -75,7 +75,7 @@
               },
               {
                   "label": "󰝟",
-                  "command": "pactl set-sink-mute @DEFAULT_SINK@ toggle"
+                  "command": "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
 
               }
           ]

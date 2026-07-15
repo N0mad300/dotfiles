@@ -1,2 +1,4 @@
-#!/bin/zsh
-wlogout
+#!/bin/sh
+set -eu
+
+exec wlogout

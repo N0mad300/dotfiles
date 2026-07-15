@@ -1,0 +1,20 @@
+-- Fallback palette. Matugen overwrites this file when a wallpaper is selected.
+return {
+    background = "#0f1416ff",
+    error = "#ffb4abff",
+    on_background = "#dee3e6ff",
+    on_surface = "#dee3e6ff",
+    on_surface_variant = "#bfc8ccff",
+    outline = "#899296ff",
+    outline_variant = "#40484bff",
+    primary = "#86d1e9ff",
+    primary_container = "#004e5fff",
+    secondary = "#b3cad3ff",
+    secondary_container = "#344a52ff",
+    surface = "#0f1416ff",
+    surface_container = "#1b2023ff",
+    surface_container_high = "#252b2dff",
+    surface_container_highest = "#303638ff",
+    tertiary = "#c1c4ebff",
+    tertiary_container = "#414465ff",
+}

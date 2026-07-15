@@ -1,143 +1,96 @@
-#!/bin/bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
-# Scripts for volume controls for audio and mic 
+#!/bin/sh
+set -eu
 
-iDIR="$HOME/.config/swaync/icons"
-sDIR="$HOME/.config/hypr/scripts"
+icon_dir="$HOME/.config/swaync/icons"
+sink="@DEFAULT_AUDIO_SINK@"
+source="@DEFAULT_AUDIO_SOURCE@"
 
-# Get Volume
-get_volume() {
-    volume=$(pamixer --get-volume)
-    if [[ "$volume" -eq "0" ]]; then
-        echo "Muted"
+get_raw() {
+    wpctl get-volume "$1"
+}
+
+get_percent() {
+    get_raw "$1" | awk '/Volume:/ { printf "%.0f\n", $2 * 100 }'
+}
+
+is_muted() {
+    get_raw "$1" | grep -q '\[MUTED\]'
+}
+
+volume_icon() {
+    current=$(get_percent "$sink")
+    if is_muted "$sink"; then
+        printf '%s\n' "$icon_dir/volume-mute.png"
+    elif [ "$current" -le 30 ]; then
+        printf '%s\n' "$icon_dir/volume-low.png"
+    elif [ "$current" -le 60 ]; then
+        printf '%s\n' "$icon_dir/volume-mid.png"
     else
-        echo "$volume %"
+        printf '%s\n' "$icon_dir/volume-high.png"
     fi
 }
 
-# Get icons
-get_icon() {
-    current=$(get_volume)
-    if [[ "$current" == "Muted" ]]; then
-        echo "$iDIR/volume-mute.png"
-    elif [[ "${current%\%}" -le 30 ]]; then
-        echo "$iDIR/volume-low.png"
-    elif [[ "${current%\%}" -le 60 ]]; then
-        echo "$iDIR/volume-mid.png"
+notify_sink() {
+    current=$(get_percent "$sink")
+    if is_muted "$sink"; then
+        notify-send -t 1000 -u low -i "$icon_dir/volume-mute.png" "Volume" "Muted"
     else
-        echo "$iDIR/volume-high.png"
+        notify-send -t 1000 -u low             -h string:x-canonical-private-synchronous:volume             -h int:value:"$current"             -i "$(volume_icon)" "Volume" "$current%"
     fi
 }
 
-# Notify
-notify_user() {
-    if [[ "$(get_volume)" == "Muted" ]]; then
-        notify-send -e -h string:x-canonical-private-synchronous:volume_notif -u low -i "$(get_icon)" " Volume:" " Muted"
+notify_source() {
+    current=$(get_percent "$source")
+    if is_muted "$source"; then
+        icon="$icon_dir/microphone-mute.png"
+        text="Muted"
     else
-        notify-send -e -h int:value:"$(get_volume | sed 's/%//')" -h string:x-canonical-private-synchronous:volume_notif -u low -i "$(get_icon)" " Volume Level:" " $(get_volume)" &&
-        "$sDIR/Sounds.sh" --volume
+        icon="$icon_dir/microphone.png"
+        text="$current%"
     fi
+    notify-send -t 1000 -u low         -h string:x-canonical-private-synchronous:microphone         -h int:value:"$current"         -i "$icon" "Microphone" "$text"
 }
 
-# Increase Volume
-inc_volume() {
-    if [ "$(pamixer --get-mute)" == "true" ]; then
-        toggle_mute
-    else
-        pamixer -i 5 --allow-boost --set-limit 150 && notify_user
-    fi
-}
-
-# Decrease Volume
-dec_volume() {
-    if [ "$(pamixer --get-mute)" == "true" ]; then
-        toggle_mute
-    else
-        pamixer -d 5 && notify_user
-    fi
-}
-
-# Toggle Mute
-toggle_mute() {
-	if [ "$(pamixer --get-mute)" == "false" ]; then
-		pamixer -m && notify-send -e -u low -i "$iDIR/volume-mute.png" " Mute"
-	elif [ "$(pamixer --get-mute)" == "true" ]; then
-		pamixer -u && notify-send -e -u low -i "$(get_icon)" " Volume:" " Switched ON"
-	fi
-}
-
-# Toggle Mic
-toggle_mic() {
-	if [ "$(pamixer --default-source --get-mute)" == "false" ]; then
-		pamixer --default-source -m && notify-send -e -u low -i "$iDIR/microphone-mute.png" " Microphone:" " Switched OFF"
-	elif [ "$(pamixer --default-source --get-mute)" == "true" ]; then
-		pamixer -u --default-source u && notify-send -e -u low -i "$iDIR/microphone.png" " Microphone:" " Switched ON"
-	fi
-}
-# Get Mic Icon
-get_mic_icon() {
-    current=$(pamixer --default-source --get-volume)
-    if [[ "$current" -eq "0" ]]; then
-        echo "$iDIR/microphone-mute.png"
-    else
-        echo "$iDIR/microphone.png"
-    fi
-}
-
-# Get Microphone Volume
-get_mic_volume() {
-    volume=$(pamixer --default-source --get-volume)
-    if [[ "$volume" -eq "0" ]]; then
-        echo "Muted"
-    else
-        echo "$volume %"
-    fi
-}
-
-# Notify for Microphone
-notify_mic_user() {
-    volume=$(get_mic_volume)
-    icon=$(get_mic_icon)
-    notify-send -e -h int:value:"$volume" -h "string:x-canonical-private-synchronous:volume_notif" -u low -i "$icon"  " Mic Level:" " $volume"
-}
-
-# Increase MIC Volume
-inc_mic_volume() {
-    if [ "$(pamixer --default-source --get-mute)" == "true" ]; then
-        toggle_mic
-    else
-        pamixer --default-source -i 5 && notify_mic_user
-    fi
-}
-
-# Decrease MIC Volume
-dec_mic_volume() {
-    if [ "$(pamixer --default-source --get-mute)" == "true" ]; then
-        toggle-mic
-    else
-        pamixer --default-source -d 5 && notify_mic_user
-    fi
-}
-
-# Execute accordingly
-if [[ "$1" == "--get" ]]; then
-	get_volume
-elif [[ "$1" == "--inc" ]]; then
-	inc_volume
-elif [[ "$1" == "--dec" ]]; then
-	dec_volume
-elif [[ "$1" == "--toggle" ]]; then
-	toggle_mute
-elif [[ "$1" == "--toggle-mic" ]]; then
-	toggle_mic
-elif [[ "$1" == "--get-icon" ]]; then
-	get_icon
-elif [[ "$1" == "--get-mic-icon" ]]; then
-	get_mic_icon
-elif [[ "$1" == "--mic-inc" ]]; then
-	inc_mic_volume
-elif [[ "$1" == "--mic-dec" ]]; then
-	dec_mic_volume
-else
-	get_volume
-fi
+case "${1:---get}" in
+    --get)
+        if is_muted "$sink"; then printf 'Muted\n'; else printf '%s %%\n' "$(get_percent "$sink")"; fi
+        ;;
+    --get-icon)
+        volume_icon
+        ;;
+    --inc)
+        wpctl set-volume -l 1.5 "$sink" 5%+
+        notify_sink
+        ;;
+    --dec)
+        wpctl set-volume "$sink" 5%-
+        notify_sink
+        ;;
+    --toggle)
+        wpctl set-mute "$sink" toggle
+        notify_sink
+        ;;
+    --toggle-mic)
+        wpctl set-mute "$source" toggle
+        notify_source
+        ;;
+    --mic-inc)
+        wpctl set-volume -l 1.5 "$source" 5%+
+        notify_source
+        ;;
+    --mic-dec)
+        wpctl set-volume "$source" 5%-
+        notify_source
+        ;;
+    --get-mic-icon)
+        if is_muted "$source"; then
+            printf '%s\n' "$icon_dir/microphone-mute.png"
+        else
+            printf '%s\n' "$icon_dir/microphone.png"
+        fi
+        ;;
+    *)
+        printf 'Usage: %s {--get|--get-icon|--inc|--dec|--toggle|--toggle-mic|--mic-inc|--mic-dec|--get-mic-icon}\n' "$0" >&2
+        exit 2
+        ;;
+esac

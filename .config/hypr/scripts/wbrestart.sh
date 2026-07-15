@@ -1,7 +1,15 @@
-#!/bin/zsh
+#!/bin/sh
+set -eu
 
-killall -9 swaync
-killall -9 waybar
+pkill -x waybar >/dev/null 2>&1 || true
+pkill -x swaync >/dev/null 2>&1 || true
 
-swaync &
-waybar &
+attempt=0
+while pgrep -x waybar >/dev/null 2>&1 || pgrep -x swaync >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    [ "$attempt" -ge 20 ] && break
+    sleep 0.1
+done
+
+swaync >/dev/null 2>&1 &
+waybar >/dev/null 2>&1 &

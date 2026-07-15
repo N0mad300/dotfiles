@@ -1,31 +1,23 @@
 #!/bin/bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
-# Not my own work. This was added through Github PR. Credit to original author
+set -euo pipefail
 
-#----- Optimized bars animation without much CPU usage increase --------
 bar="▁▂▃▄▅▆▇█"
 dict="s/;//g"
-
-# Calculate the length of the bar outside the loop
-bar_length=${#bar}
-
-# Create dictionary to replace char with bar
-for ((i = 0; i < bar_length; i++)); do
+for ((i = 0; i < ${#bar}; i++)); do
     dict+=";s/$i/${bar:$i:1}/g"
 done
 
-# Create cava config
-config_file="/tmp/bar_cava_config"
-cat >"$config_file" <<EOF
+runtime_dir="${XDG_RUNTIME_DIR:-/tmp}"
+config_file="$runtime_dir/waybar-cava-${UID}.conf"
+trap 'rm -f "$config_file"' EXIT
+
+cat >"$config_file" <<'EOF'
 [general]
-# Older systems show significant CPU use with default framerate
-# Setting maximum framerate to 30  
-# You can increase the value if you wish
 framerate = 30
 bars = 10
 
 [input]
-method = pulse
+method = pipewire
 source = auto
 
 [output]
@@ -35,8 +27,5 @@ data_format = ascii
 ascii_max_range = 7
 EOF
 
-# Kill cava if it's already running
-pkill -f "cava -p $config_file"
-
-# Read stdout from cava and perform substitution in a single sed command
+pkill -f "cava -p $config_file" >/dev/null 2>&1 || true
 cava -p "$config_file" | sed -u "$dict"

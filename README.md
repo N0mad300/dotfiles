@@ -206,6 +206,31 @@ the service again:
     sudo rm -f /etc/sv/sddm/down
     sudo sv up sddm
 
+## Waybar configuration
+
+The deploy step creates these active links:
+
+    ~/.config/waybar/config -> ~/.config/waybar/configs/[TOP] 0-Ja-0 Been modified
+    ~/.config/waybar/style.css -> ~/.config/waybar/style/islands.css
+
+Waybar falls back to `/etc/xdg/waybar` when its user configuration is missing.
+The supplied startup and restart commands therefore pass both paths explicitly,
+so a broken link produces an error instead of displaying the system-default bar.
+
+After pulling an updated repository, repair the links by deploying again:
+
+    ./setup-void.sh --deploy
+
+Or recreate only the links manually:
+
+    rm -f ~/.config/waybar/config ~/.config/waybar/style.css
+    ln -s "$HOME/.config/waybar/configs/[TOP] 0-Ja-0 Been modified" \
+        ~/.config/waybar/config
+    ln -s "$HOME/.config/waybar/style/islands.css" ~/.config/waybar/style.css
+
+Restart Waybar with `~/.config/hypr/scripts/wbrestart.sh`. Its diagnostic output
+is stored in `~/.local/state/void-hyprland/waybar.log`.
+
 ## First-run adjustments
 
 1. Edit .config/hypr/configs/monitors.lua. The preserved laptop default is eDP-1 at 1920x1080@60.

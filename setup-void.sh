@@ -138,8 +138,14 @@ deploy() {
     mkdir -p "$HOME/Pictures/wallpapers"
     cp -an "$repo_dir/wallpapers/." "$HOME/Pictures/wallpapers/"
 
-    ln -sfn "$HOME/.config/waybar/configs/[TOP] 0-Ja-0 Been modified" "$HOME/.config/waybar/config"
-    ln -sfn "$HOME/.config/waybar/style/islands.css" "$HOME/.config/waybar/style.css"
+    waybar_config="$HOME/.config/waybar/config"
+    waybar_style="$HOME/.config/waybar/style.css"
+    rm -f "$waybar_config" "$waybar_style"
+    ln -s "$HOME/.config/waybar/configs/[TOP] 0-Ja-0 Been modified" "$waybar_config"
+    ln -s "$HOME/.config/waybar/style/islands.css" "$waybar_style"
+    [ -f "$waybar_config" ] || { printf 'Failed to create Waybar config link.\n' >&2; exit 1; }
+    [ -f "$waybar_style" ] || { printf 'Failed to create Waybar style link.\n' >&2; exit 1; }
+
     chmod +x "$HOME"/.config/hypr/scripts/*.sh
 
     mkdir -p "$HOME/.config/pipewire/pipewire.conf.d"

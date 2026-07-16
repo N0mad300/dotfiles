@@ -32,6 +32,11 @@ Install, enable the runit services, and deploy the dots:
     chmod +x setup-void.sh
     ./setup-void.sh --all
 
+Do not run the whole script with `sudo`. It deliberately exits when run as
+root because `$HOME` would otherwise be `/root`, causing the dotfiles and their
+backups to be installed there. The script requests `doas` or `sudo` itself only
+for XBPS and runit operations.
+
 The deploy step backs up every matching config directory under:
 
     ~/.local/state/void-hyprland/backups/<timestamp>/
@@ -49,21 +54,166 @@ The setup script enables these system services by linking their packaged service
 - dbus
 - NetworkManager
 - bluetoothd
-- elogind
 
-This follows the [Void runit service model](https://docs.voidlinux.org/config/services/index.html). elogind supplies XDG_RUNTIME_DIR, seat/session handling, and unprivileged power actions. You can substitute turnstile plus seatd, but then adapt power.sh and ensure XDG_RUNTIME_DIR is created correctly.
+This follows the [Void runit service model](https://docs.voidlinux.org/config/services/index.html).
+The `elogind` package remains installed for `XDG_RUNTIME_DIR`, seat/session
+handling, and unprivileged power actions, but its runit service is not enabled
+automatically. Void normally activates elogind through the system D-Bus. Do
+not enable a second copy if elogind is already running; the symptom is:
 
-When starting from a TTY, use a D-Bus session:
+    elogind is already running as PID ...
 
-    dbus-run-session Hyprland
+If D-Bus activation causes problems on a particular machine, enable the
+packaged elogind service only after confirming there is not already another
+elogind process.
 
-A display manager or turnstile-managed session may already provide the session bus. See the [Void session management guide](https://docs.voidlinux.org/config/session-management.html).
+When starting from a TTY, use the current Hyprland launcher inside a user
+D-Bus session:
+
+    exec dbus-run-session start-hyprland
+
+`start-hyprland` is preferred over invoking the `Hyprland` binary directly.
+`dbus-run-session` creates the user session bus used by Waybar, notifications,
+portals, and other desktop applications. The
+`dbus-update-activation-environment` command in `autostart.lua` updates that
+existing bus with the Wayland/Hyprland variables; it cannot create the bus.
+See the [Void session management guide](https://docs.voidlinux.org/config/session-management.html).
+
+## Required fonts
+
+The Waybar, Rofi, Kitty, SwayNC, Wlogout, and Hyprlock configurations use
+JetBrains Mono Nerd Font names and Nerd Font icon glyphs. The installer tries
+to install Void's `nerd-fonts` package plus `noto-fonts-emoji`.
+
+Verify the fonts after installation:
+
+    fc-match "JetBrainsMono Nerd Font"
+    fc-match "JetBrainsMono Nerd Font Propo"
+
+If icons are boxes or missing, install/reinstall the font package and rebuild
+the font cache:
+
+    sudo xbps-install -S nerd-fonts noto-fonts-emoji
+    fc-cache -fv
+
+Void also permits per-user fonts under `~/.local/share/fonts`. If using a
+manually downloaded JetBrainsMono Nerd Font archive, extract its `.ttf` files
+there and run `fc-cache -fv`.
+
+## SDDM on Void
+
+SDDM's greeter is Xorg-based by default even though the selected Hyprland
+session is Wayland. Install SDDM, its X server requirements, and the Qt6
+modules required by the Astronaut theme:
+
+    sudo xbps-install -S \
+        sddm xorg-minimal xorg-fonts mesa-dri \
+        qt6-svg qt6-virtualkeyboard qt6-multimedia
+
+The missing `xorg-minimal`, `xorg-fonts`, or `mesa-dri` packages can leave the
+SDDM service running without displaying a greeter.
+
+Ensure the system D-Bus and SDDM services are enabled:
+
+    [ -e /var/service/dbus ] || sudo ln -s /etc/sv/dbus /var/service/dbus
+    [ -e /var/service/sddm ] || sudo ln -s /etc/sv/sddm /var/service/sddm
+    sudo sv up dbus sddm
+    sudo sv status dbus sddm
+
+Do not test SDDM by running `sudo sddm` directly. Use its runit service so it
+is supervised and receives the packaged environment. SDDM may use a graphical
+VT beyond the six TTYs that have text login prompts; that is normal.
+
+### Hyprland session entry
+
+On Void/runit, SDDM may authenticate the login without creating the user's
+D-Bus session bus. If `DBUS_SESSION_BUS_ADDRESS` is empty after logging in,
+Waybar and `notify-send` can fail with:
+
+    Cannot autolaunch D-Bus without X11 $DISPLAY
+
+Create `/usr/share/wayland-sessions/hyprland-void.desktop`:
+
+    [Desktop Entry]
+    Name=Hyprland (Void)
+    Comment=Hyprland Wayland session with D-Bus
+    Exec=/usr/bin/dbus-run-session /usr/bin/start-hyprland
+    Type=Application
+    DesktopNames=Hyprland
+    Keywords=tiling;wayland;compositor;
+
+Select **Hyprland (Void)** in SDDM. Do not wrap the command in a second
+`dbus-run-session` anywhere else. After login, verify:
+
+    printf '%s\n' "$DBUS_SESSION_BUS_ADDRESS"
+    pgrep -af waybar
+
+### Astronaut theme
+
+The [SDDM Astronaut theme](https://github.com/Keyitdev/sddm-astronaut-theme)
+installer supports `xbps-install` and runit:
+
+    bash -c "$(curl -fsSL https://raw.githubusercontent.com/keyitdev/sddm-astronaut-theme/master/setup.sh)"
+
+Run that command as the normal user; let the script request `sudo` itself. It
+installs the theme under
+`/usr/share/sddm/themes/sddm-astronaut-theme`, copies its fonts, selects the
+theme in `/etc/sddm.conf`, and can enable the SDDM runit service.
+
+The visual preset is independent from the Hyprland launch command. Change the
+preset in:
+
+    /usr/share/sddm/themes/sddm-astronaut-theme/metadata.desktop
+
+For example:
+
+    ConfigFile=Themes/hyprland_kath.conf
+
+Preview it without logging out:
+
+    sddm-greeter-qt6 --test-mode \
+        --theme /usr/share/sddm/themes/sddm-astronaut-theme/
+
+### French keyboard in SDDM
+
+SDDM's Xorg keyboard layout is separate from Hyprland's input configuration.
+Create `/etc/X11/xorg.conf.d/00-keyboard.conf`:
+
+    Section "InputClass"
+        Identifier "French keyboard"
+        MatchIsKeyboard "on"
+        Option "XkbLayout" "fr"
+    EndSection
+
+Then restart the greeter:
+
+    sudo sv restart sddm
+
+Set Hyprland's own layout separately in
+`.config/hypr/configs/input.lua` with `kb_layout = "fr"`.
+
+### SDDM troubleshooting
+
+Check the supervised service and its logs:
+
+    sudo sv status sddm
+    sudo tail -n 100 /var/log/sddm/current
+    sudo tail -n 100 /var/log/Xorg.0.log
+
+If `sv status` says `want down`, clear the packaged down marker and request
+the service again:
+
+    sudo rm -f /etc/sv/sddm/down
+    sudo sv up sddm
 
 ## First-run adjustments
 
 1. Edit .config/hypr/configs/monitors.lua. The preserved laptop default is eDP-1 at 1920x1080@60.
 2. Put wallpapers in ~/Pictures/wallpapers or set WALLPAPER_DIR before running wppicker.sh.
-3. Press Super+W to select a wallpaper. Matugen updates awww, Hyprland, Hyprlock, Waybar, Kitty, Rofi, GTK, and Cava colors.
+3. Press Super+W to select a wallpaper. The picker passes
+   `--source-color-index 0` so Matugen chooses the dominant color without
+   opening a terminal-only prompt. Matugen then updates awww, Hyprland,
+   Hyprlock, Waybar, Kitty, Rofi, GTK, and Cava colors.
 4. If PipeWire has no devices, follow the [Void PipeWire setup](https://docs.voidlinux.org/config/media/pipewire.html) and re-login.
 5. Run `hyprctl reload` to force a reload. Lua syntax and runtime failures are reported by Hyprland; `hyprctl repl` is available for interactive inspection.
 

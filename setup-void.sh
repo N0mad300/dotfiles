@@ -1,6 +1,19 @@
 #!/bin/sh
 set -eu
 
+if [ "$(id -u)" -eq 0 ]; then
+    cat >&2 <<'EOF'
+Do not run setup-void.sh as root or with sudo.
+
+Run it as the desktop user instead:
+    ./setup-void.sh --all
+
+The script requests doas/sudo only for XBPS and runit operations. Running the
+whole script as root would deploy the dotfiles and backups under /root.
+EOF
+    exit 1
+fi
+
 repo_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 do_install=false
 do_services=false
@@ -11,7 +24,7 @@ usage() {
 Usage: ./setup-void.sh [options]
 
   --install-packages  Install dependencies available to XBPS.
-  --enable-services   Enable dbus, NetworkManager, bluetoothd, and elogind.
+  --enable-services   Enable dbus, NetworkManager, and bluetoothd.
   --deploy            Back up existing matching configs and install these dots.
   --all               Perform all three actions.
   -h, --help          Show this help.
@@ -68,6 +81,7 @@ install_packages() {
         pipewire wireplumber alsa-pipewire libspa-bluetooth pavucontrol
         brightnessctl grim slurp wl-clipboard playerctl libnotify jq
         fastfetch cava btop nvtop yazi zsh util-linux xdg-utils
+        nerd-fonts noto-fonts-emoji
         xdg-desktop-portal-gtk
     "
 
@@ -85,7 +99,7 @@ install_packages() {
 }
 
 enable_services() {
-    for service in dbus NetworkManager bluetoothd elogind; do
+    for service in dbus NetworkManager bluetoothd; do
         if [ ! -d "/etc/sv/$service" ]; then
             printf 'Service directory not installed, skipping: %s\n' "$service" >&2
             continue

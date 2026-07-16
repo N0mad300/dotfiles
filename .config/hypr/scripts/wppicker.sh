@@ -43,7 +43,7 @@ selected_path="$wallpaper_dir/$selected"
 mkdir -p "$(dirname "$current_wallpaper")"
 ln -sfn "$selected_path" "$current_wallpaper"
 
-if matugen image "$selected_path"; then
+if matugen image "$selected_path" --source-color-index 0; then
     notify-send -t 1500 -u low -i "$selected_path" "Wallpaper changed" "$selected"
 else
     notify-send -u critical "Wallpaper picker" "Matugen failed for: $selected"

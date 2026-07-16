@@ -90,7 +90,7 @@ to install Void's `nerd-fonts` package plus `noto-fonts-emoji`.
 
 Verify the fonts after installation:
 
-    fc-match "JetBrainsMono Nerd Font"
+    fc-match "JetBrainsMono Nerd Font Mono:weight=bold"
     fc-match "JetBrainsMono Nerd Font Propo"
 
 If icons are boxes or missing, install/reinstall the font package and rebuild
@@ -244,10 +244,13 @@ text and resolved target. It also prints each successful link, making a failed
 
 Foot is now the default terminal and is installed by `--install-packages`.
 Its configuration is under `~/.config/foot`. The initial palette mirrors the
-Kitty configuration, using the same `JetBrainsMono NF Bold` family at Foot size
-11 instead of Kitty size 12. Matugen writes wallpaper-derived colors to
-`~/.config/foot/colors.ini` under Foot's current `[colors-dark]` section. Foot
-reads that palette when a new window starts, so existing Foot windows keep
+Kitty configuration, using the same JetBrains Mono Nerd Font in bold at Foot
+size 11 instead of Kitty size 12. Foot uses the Fontconfig family
+`JetBrainsMono Nerd Font Mono` with `weight=bold`; the explicit `Mono` variant
+prevents Foot from rejecting a proportional face or falling back to DejaVu Sans.
+Matugen writes wallpaper-derived colors to `~/.config/foot/colors.ini` under
+Foot's current `[colors-dark]` section. Foot reads that palette when a new
+window starts, so existing Foot windows keep
 their currently loaded colors.
 
 Kitty remains installed and its configuration is preserved as an alternative.

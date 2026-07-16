@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-terminal="${TERMINAL:-kitty}"
+terminal="${TERMINAL:-foot}"
 
 case "${1:-}" in
     --nvtop)

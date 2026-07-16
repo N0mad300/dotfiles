@@ -15,7 +15,7 @@
 
   "custom/tty": {
     "format": " ",
-    "on-click": "kitty",
+    "on-click": "foot",
     "tooltip-format": "Terminal"
   },
 

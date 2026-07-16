@@ -76,7 +76,7 @@ install_packages() {
 
     official_packages="
         awww matugen Waybar rofi SwayNotificationCenter wlogout
-        kitty nautilus NetworkManager network-manager-applet
+        foot kitty nautilus NetworkManager network-manager-applet
         bluez blueman dbus elogind polkit
         pipewire wireplumber alsa-pipewire libspa-bluetooth pavucontrol
         brightnessctl grim slurp wl-clipboard playerctl libnotify jq
@@ -113,6 +113,40 @@ enable_services() {
     done
 }
 
+create_relative_symlink() {
+    directory=$1
+    target=$2
+    link_name=$3
+    link_path="$directory/$link_name"
+
+    [ -d "$directory" ] || {
+        printf 'Cannot create link; directory is missing: %s\n' "$directory" >&2
+        return 1
+    }
+
+    [ -e "$directory/$target" ] || {
+        printf 'Cannot create link; target is missing: %s/%s\n' "$directory" "$target" >&2
+        return 1
+    }
+
+    if [ -d "$link_path" ] && [ ! -L "$link_path" ]; then
+        printf 'Refusing to replace a real directory with a link: %s\n' "$link_path" >&2
+        return 1
+    fi
+
+    rm -f "$link_path"
+    (
+        cd "$directory"
+        ln -s "$target" "$link_name"
+    )
+
+    [ -L "$link_path" ] && [ -e "$link_path" ] && [ "$(readlink "$link_path")" = "$target" ] || {
+        printf 'Failed to create symbolic link: %s -> %s\n' "$link_path" "$target" >&2
+        return 1
+    }
+    printf 'Linked: %s -> %s\n' "$link_path" "$target"
+}
+
 deploy() {
     timestamp=$(date +'%Y%m%d-%H%M%S')
     state_home=${XDG_STATE_HOME:-"$HOME/.local/state"}
@@ -138,13 +172,9 @@ deploy() {
     mkdir -p "$HOME/Pictures/wallpapers"
     cp -an "$repo_dir/wallpapers/." "$HOME/Pictures/wallpapers/"
 
-    waybar_config="$HOME/.config/waybar/config"
-    waybar_style="$HOME/.config/waybar/style.css"
-    rm -f "$waybar_config" "$waybar_style"
-    ln -s "$HOME/.config/waybar/configs/[TOP] 0-Ja-0 Been modified" "$waybar_config"
-    ln -s "$HOME/.config/waybar/style/islands.css" "$waybar_style"
-    [ -f "$waybar_config" ] || { printf 'Failed to create Waybar config link.\n' >&2; exit 1; }
-    [ -f "$waybar_style" ] || { printf 'Failed to create Waybar style link.\n' >&2; exit 1; }
+    waybar_home="$HOME/.config/waybar"
+    create_relative_symlink "$waybar_home" "configs/[TOP] 0-Ja-0 Been modified" "config"
+    create_relative_symlink "$waybar_home" "style/islands.css" "style.css"
 
     chmod +x "$HOME"/.config/hypr/scripts/*.sh
 

@@ -1,15 +1,16 @@
 local mainMod = "SUPER"
-local terminal = "kitty"
+local terminal = "foot"
 local fileManager = "nautilus"
 local menu = "rofi -show drun"
 local home = os.getenv("HOME") or ""
 local scripts = home .. "/.config/hypr/scripts"
 
-hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(terminal))
-hl.bind(mainMod .. " + SHIFT + Return", hl.dsp.exec_cmd(terminal, { float = true, size = { 800, 550 } }))
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(terminal))
+hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd(terminal, { float = true, size = { 800, 550 } }))
 hl.bind(mainMod .. " + Q", hl.dsp.window.close())
 hl.bind("CTRL + ALT + Delete", hl.dsp.exit())
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
+-- This toggles tiling/floating. Fullscreen is bound separately below.
 hl.bind(mainMod .. " + Space", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + D", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
@@ -19,13 +20,17 @@ hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("xdg-open https://"))
 hl.bind(mainMod .. " + L", hl.dsp.exec_cmd(scripts .. "/hyprlock.sh"))
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen())
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd(scripts .. "/screenshot.sh"))
+hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("scratchpad"))
+hl.bind(mainMod .. " + CTRL + S", hl.dsp.window.move({ workspace = "special:scratchpad" }))
 hl.bind(mainMod .. " + W", hl.dsp.exec_cmd(scripts .. "/wppicker.sh"))
 hl.bind(mainMod .. " + SHIFT + Q", hl.dsp.window.kill())
 hl.bind(mainMod .. " + C", hl.dsp.exec_cmd("hyprpicker -a"))
 hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd(scripts .. "/WaybarStyles.sh"))
 hl.bind(mainMod .. " + ALT + B", hl.dsp.exec_cmd(scripts .. "/WaybarLayout.sh"))
 hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("pkill -SIGUSR1 waybar"))
-hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("kitty yazi"))
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd(terminal .. " yazi"))
+hl.bind(mainMod .. " + Tab", hl.dsp.focus({ workspace = "e+1" }))
+hl.bind(mainMod .. " + SHIFT + Tab", hl.dsp.focus({ workspace = "e-1" }))
 
 for _, direction in ipairs({ "left", "right", "up", "down" }) do
     hl.bind(mainMod .. " + " .. direction, hl.dsp.focus({ direction = direction }))

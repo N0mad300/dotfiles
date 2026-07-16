@@ -28,5 +28,13 @@ case "$choice" in
 esac
 
 [ -f "$layouts/$choice" ] || exit 1
-ln -sfn "$layouts/$choice" "$active"
+rm -f "$active"
+(
+    cd "$HOME/.config/waybar"
+    ln -s "configs/$choice" config
+)
+[ -f "$active" ] || {
+    printf 'Failed to activate Waybar layout: %s\n' "$choice" >&2
+    exit 1
+}
 exec "$HOME/.config/hypr/scripts/wbrestart.sh"

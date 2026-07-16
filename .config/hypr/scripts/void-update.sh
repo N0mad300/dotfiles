@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-terminal="${TERMINAL:-kitty}"
+terminal="${TERMINAL:-foot}"
 
 exec "$terminal" sh -lc '
 set -e

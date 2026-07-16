@@ -21,7 +21,7 @@ windowRule("settings", { tag = "settings" }, { opacity = "0.8", float = true })
 windowRule("viewers", { tag = "viewer" }, { float = true })
 windowRule("nautilus-opacity", { class = "^org\\.gnome\\.Nautilus$" }, { opacity = "0.8" })
 windowRule("editors-opacity", { class = "^(gedit|org\\.gnome\\.TextEditor|mousepad)$" }, { opacity = "0.9" })
-windowRule("kitty-opacity", { class = "^kitty$" }, { opacity = "0.9" })
+windowRule("terminal-opacity", { class = "^(foot|kitty)$" }, { opacity = "0.9" })
 windowRule("chat-opacity", { class = "^(discord|vesktop|org\\.telegram\\.desktop)$" }, {
     opacity = "0.85 override 0.7 override 1 override",
 })

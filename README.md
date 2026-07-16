@@ -81,7 +81,7 @@ See the [Void session management guide](https://docs.voidlinux.org/config/sessio
 
 ## Required fonts
 
-The Waybar, Rofi, Kitty, SwayNC, Wlogout, and Hyprlock configurations use
+The Waybar, Rofi, Foot, Kitty, SwayNC, Wlogout, and Hyprlock configurations use
 JetBrains Mono Nerd Font names and Nerd Font icon glyphs. The installer tries
 to install Void's `nerd-fonts` package plus `noto-fonts-emoji`.
 
@@ -224,12 +224,30 @@ After pulling an updated repository, repair the links by deploying again:
 Or recreate only the links manually:
 
     rm -f ~/.config/waybar/config ~/.config/waybar/style.css
-    ln -s "$HOME/.config/waybar/configs/[TOP] 0-Ja-0 Been modified" \
-        ~/.config/waybar/config
-    ln -s "$HOME/.config/waybar/style/islands.css" ~/.config/waybar/style.css
+    (
+        cd ~/.config/waybar
+        ln -s "configs/[TOP] 0-Ja-0 Been modified" config
+        ln -s "style/islands.css" style.css
+    )
 
 Restart Waybar with `~/.config/hypr/scripts/wbrestart.sh`. Its diagnostic output
 is stored in `~/.local/state/void-hyprland/waybar.log`.
+
+The installer deliberately creates relative links and verifies both the link
+text and resolved target. It also prints each successful link, making a failed
+`--deploy` visible instead of letting Waybar silently use `/etc/xdg/waybar`.
+
+## Foot terminal
+
+Foot is now the default terminal and is installed by `--install-packages`.
+Its configuration is under `~/.config/foot`. The initial palette mirrors the
+Kitty configuration, while Matugen writes wallpaper-derived colors to
+`~/.config/foot/colors.ini`. Foot reads that palette when a new window starts,
+so existing Foot windows keep their currently loaded colors.
+
+Kitty remains installed and its configuration is preserved as an alternative.
+Change the `terminal` value in `keybinds.lua` and the `TERMINAL` environment
+variable in `environment.lua` if you want to switch back globally.
 
 ## First-run adjustments
 
@@ -238,21 +256,26 @@ is stored in `~/.local/state/void-hyprland/waybar.log`.
 3. Press Super+W to select a wallpaper. The picker passes
    `--source-color-index 0` so Matugen chooses the dominant color without
    opening a terminal-only prompt. Matugen then updates awww, Hyprland,
-   Hyprlock, Waybar, Kitty, Rofi, GTK, and Cava colors.
+   Hyprlock, Waybar, Foot, Kitty, Rofi, GTK, and Cava colors.
 4. If PipeWire has no devices, follow the [Void PipeWire setup](https://docs.voidlinux.org/config/media/pipewire.html) and re-login.
 5. Run `hyprctl reload` to force a reload. Lua syntax and runtime failures are reported by Hyprland; `hyprctl repl` is available for interactive inspection.
 
 ## Main keybinds
 
-- Super+Return: terminal
+- Super+T: Foot terminal
+- Super+Shift+T: floating Foot terminal
 - Super+D: application launcher
 - Super+E: file manager
+- Super+Tab / Super+Shift+Tab: next / previous open workspace
+- Super+S: toggle the `scratchpad` special workspace
+- Super+Ctrl+S: move the active window to `scratchpad`
 - Super+W: wallpaper picker
 - Super+L: lock
 - Super+Q: close window
 - Super+Shift+Q: force-kill window
 - Super+Shift+S: region screenshot
-- Super+Space: toggle floating
+- Super+Space: toggle tiling/floating; it is not fullscreen
+- Super+Shift+F: toggle actual fullscreen
 - Super+1..0: workspaces 1..10
 - Super+Shift+1..0: move a window to a workspace
 

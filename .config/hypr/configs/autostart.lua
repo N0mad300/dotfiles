@@ -6,7 +6,7 @@ local commands = {
     "pgrep -x nm-applet >/dev/null || exec nm-applet",
     "pgrep -x blueman-applet >/dev/null || exec blueman-applet",
     "pgrep -x swaync >/dev/null || exec swaync",
-    "pgrep -x waybar >/dev/null || exec waybar",
+    "pgrep -x waybar >/dev/null || exec waybar -c \"$HOME/.config/waybar/config\" -s \"$HOME/.config/waybar/style.css\"",
     "pgrep -x hyprpolkitagent >/dev/null || exec hyprpolkitagent",
     "pgrep -x hypridle >/dev/null || exec hypridle",
     "pgrep -x awww-daemon >/dev/null || exec awww-daemon",

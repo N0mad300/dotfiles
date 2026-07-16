@@ -12,4 +12,13 @@ while pgrep -x waybar >/dev/null 2>&1 || pgrep -x swaync >/dev/null 2>&1; do
 done
 
 swaync >/dev/null 2>&1 &
-waybar >/dev/null 2>&1 &
+
+config="$HOME/.config/waybar/config"
+style="$HOME/.config/waybar/style.css"
+state_home=${XDG_STATE_HOME:-"$HOME/.local/state"}
+log_dir="$state_home/void-hyprland"
+
+mkdir -p "$log_dir"
+[ -f "$config" ] || { printf 'Missing Waybar config: %s\n' "$config" >&2; exit 1; }
+[ -f "$style" ] || { printf 'Missing Waybar stylesheet: %s\n' "$style" >&2; exit 1; }
+waybar -c "$config" -s "$style" >"$log_dir/waybar.log" 2>&1 &

@@ -23,5 +23,13 @@ case "$choice" in
 esac
 
 [ -f "$styles/$choice.css" ] || exit 1
-ln -sfn "$styles/$choice.css" "$active"
+rm -f "$active"
+(
+    cd "$HOME/.config/waybar"
+    ln -s "style/$choice.css" style.css
+)
+[ -f "$active" ] || {
+    printf 'Failed to activate Waybar style: %s\n' "$choice" >&2
+    exit 1
+}
 exec "$HOME/.config/hypr/scripts/wbrestart.sh"

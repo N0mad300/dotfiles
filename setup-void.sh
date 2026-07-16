@@ -169,8 +169,16 @@ deploy() {
     fi
     cp -a "$repo_dir/.zshrc" "$HOME/.zshrc"
 
-    mkdir -p "$HOME/Pictures/wallpapers"
-    cp -an "$repo_dir/wallpapers/." "$HOME/Pictures/wallpapers/"
+    mkdir -p "$HOME/Pictures" "$backup/Pictures"
+    wallpaper_target="$HOME/Pictures/wallpapers"
+    if [ -e "$wallpaper_target" ] || [ -L "$wallpaper_target" ]; then
+        mv "$wallpaper_target" "$backup/Pictures/wallpapers"
+    fi
+    cp -a "$repo_dir/wallpapers" "$wallpaper_target"
+    [ -d "$wallpaper_target" ] || {
+        printf 'Failed to deploy wallpapers: %s\n' "$wallpaper_target" >&2
+        exit 1
+    }
 
     waybar_home="$HOME/.config/waybar"
     create_relative_symlink "$waybar_home" "configs/[TOP] 0-Ja-0 Been modified" "config"

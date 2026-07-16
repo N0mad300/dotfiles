@@ -41,7 +41,10 @@ The deploy step backs up every matching config directory under:
 
     ~/.local/state/void-hyprland/backups/<timestamp>/
 
-It also copies the bundled wallpapers to ~/Pictures/wallpapers, creates the active Waybar symlinks, fixes script permissions, and installs the recommended per-user PipeWire drop-ins.
+Each deploy replaces `~/Pictures/wallpapers` with a fresh copy of the bundled
+wallpapers. The previous directory is kept under the same timestamped backup.
+The deploy also creates the active Waybar symlinks, fixes script permissions,
+and installs the recommended per-user PipeWire drop-ins.
 
 If you prefer to manage packages/services yourself:
 
@@ -241,9 +244,11 @@ text and resolved target. It also prints each successful link, making a failed
 
 Foot is now the default terminal and is installed by `--install-packages`.
 Its configuration is under `~/.config/foot`. The initial palette mirrors the
-Kitty configuration, while Matugen writes wallpaper-derived colors to
-`~/.config/foot/colors.ini`. Foot reads that palette when a new window starts,
-so existing Foot windows keep their currently loaded colors.
+Kitty configuration, using the same `JetBrainsMono NF Bold` family at Foot size
+11 instead of Kitty size 12. Matugen writes wallpaper-derived colors to
+`~/.config/foot/colors.ini` under Foot's current `[colors-dark]` section. Foot
+reads that palette when a new window starts, so existing Foot windows keep
+their currently loaded colors.
 
 Kitty remains installed and its configuration is preserved as an alternative.
 Change the `terminal` value in `keybinds.lua` and the `TERMINAL` environment
